@@ -42,7 +42,8 @@ if (length(DataURL) == 1 & str_sub(DataFilename, -5, -1) == ".xlsx") {
 # Import Data, bind sheets, verify structure as expected
 
 ExpectedSheets <- c("Confirmed", "Probable")
-ExpectedCols <- c("Date of report", "Sex", "Age group", "DHB", "International travel", "Last country before return", "Flight number", "Flight departure date", "Arrival date")
+ExpectedCols <- c("Date of report", "Sex", "Age group", "DHB", "International travel", 
+                  "Last country before return", "Flight number", "Flight departure date", "Arrival date")
 
 if(identical(excel_sheets(DataFilename), ExpectedSheets)) {
   NZ_Covid19_Confirmed <- read_excel(DataFilename, sheet = "Confirmed", skip = 2)

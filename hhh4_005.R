@@ -2,6 +2,9 @@
 ### Section 3 Basic Model Fitting
 ### Assumes hh4_001-4.R results available
 ### MeaslesModel_basic <- list(.....)
+library(tidyverse)
+library(ggplot2)
+library(forecast) # For ggAcf
 covid19Model_basic<-list(
   end        = list(f = ~1+t),
   offset     = population(covidNZ),
@@ -20,6 +23,7 @@ summary(covid19Fit_basic,
         idx2Exp=TRUE, 
         amplitudeShift=FALSE, 
         maxEV=TRUE )
+### 6april data ##################################################
 # Call: 
 #   hhh4(stsObj = covidNZ, control = covid19Model_basic)
 # 
@@ -40,8 +44,28 @@ summary(covid19Fit_basic,
 # Number of units:        20 
 # Number of time points:  39 
 ### exp(end.1) is the rate at which the basic epidemic incidence increases per day.
-### Looks familiar at 2.48
 #
+### 16april data ###############################################
+# Call: 
+#     hhh4(stsObj = covidNZ, control = covid19Model_basic)
+# 
+# Coefficients:
+#     Estimate  Std. Error
+# exp(ar.1)   0.766395  0.064878  
+# exp(ne.1)   0.047719  0.011434  
+# exp(end.1)  0.056493  0.013972  
+# exp(end.t)  1.038308  0.007495  
+# overdisp    0.980477  0.128128  
+# 
+# Epidemic dominant eigenvalue:  0.96 
+# 
+# Log-likelihood:   -1062.11 
+# AIC:              2134.22 
+# BIC:              2158.76 
+# 
+# Number of units:        20 
+# Number of time points:  50
+####################################################################
 ### No plot(measlesFit_basic, type="season",...) as series is a short daily series.
 ### Relative importance of the 3 model components (subset to > 40 total counts):
 ### districts2plot <- which( etc)
@@ -58,7 +82,25 @@ plot(covid19Fit_basic, type="fitted", total=TRUE,
 #
 ### Ignore the [20:22] in the paper as we have only a few time periods
 fitted_components$Overall # Our model does not have time-varying population fractions
-#
+###########################################################################
+# Try some ts plotting and smoothing:
+ts_dat <- fitted_components$Overall[,"epidemic"]
+ggAcf(ts_dat)
+plot(ts_dat, type="l")
+ndx<-1:length(ts_dat)
+loessMod <- loess(ts_dat~ ndx, span=0.40) 
+smoothed <- predict(loessMod) 
+plot(ts_dat, x=ndx, type="l", 
+     main="Loess Smoothed Cov19 Cases", 
+     xlab="DayNbr", ylab="Cov19 Cases",
+     lwd=2)
+lines(smoothed, x=ndx, col="blue", lwd = 2)
+# What is rate of increase at most worrying stage?
+ts_worrying  <-ts_dat[16:28]
+ndx_worrying <- ndx[16:28]
+model_worrying <- lm(ts_worrying~1+ndx_worrying)
+summary(model_worrying) # 3.8852 for rate of change over steepest deterioration
+#########################################################################
 ### Time-averaged proportions of the means explianed by
 ### the different components
 colSums(fitted_components$Overall)[3:5]/sum(fitted_components$Overall[,1])

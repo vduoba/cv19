@@ -7,7 +7,7 @@ library(reshape2)
 library(plyr)
 library(sp) # For extracting spatial polygons
 library(sf) # For st_read
-library(rlist) # For lis.append()
+library(rlist) # For list.append()
 library(spdep) # For polygon adjacency measure calculation
 ### I downloaded a DHB .shp file from:
 ### https://datafinder.stats.govt.nz/layer/87883-district-health-board-2015/
@@ -17,7 +17,9 @@ library(spdep) # For polygon adjacency measure calculation
 ### ordering, and other data read in will have to conform. This will be made
 ### obvious in any code.
 ### There are two residual DHB's in this file as well as the main 20
-dhb_shp<-st_read("district-health-board-2015.shp")
+path2 <- "D:\\StatsNZ_Work\\Covid19\\cv19\\NZ COVID-19 hhh4 Model\\Data\\OldData\\"
+fyl3  <- "district-health-board-2015.shp"
+dhb_shp<-st_read(paste(path2,fyl3,sep=""))
 str(dhb_shp)   # Yuk, better to use tibble's glimpse()
 plot(dhb_shp)  # Test if everything has made sense. If plots appear, prob OK.
 ### List the DHB names in the shp file and get rid of blanks
@@ -67,5 +69,7 @@ rownames(nzrems_nbOrder) <- dhbs_in_gis[1:length(dhbs_in_data)]
 # Now need to reorder the counts data in the data matrix nz_counts_t
 # so that the order is the same as as in the nzrems_nbOrder
 ### Now fix up nz_counts_t hhh4_001.R so that its columns are in GIS columns order
+setdiff(dhbs_in_gis,dhbs_in_data)  # Check again
+setdiff(dhbs_in_data, dhbs_in_gis) # Check again
 nz_counts_t <- nz_counts_t[, dhbs_in_gis[1:length(dhbs_in_data)]]
 #################################################################

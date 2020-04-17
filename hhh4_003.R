@@ -17,7 +17,9 @@ library(rlist) # For lis.append()
 library(spdep) # For polygon adjacency measure calculation
 # https://www.fmhs.auckland.ac.nz/en/soph/about/our-departments/epidemiology-and-biostatistics/research/hgd/research-themes/imd.html
 ### Downloaded csv file from above source (can we do this via the URL?)
-nzdep13<-read.csv("IMD2013.csv", header=TRUE, sep=",")
+path3 <- "D:\\StatsNZ_Work\\Covid19\\cv19\\NZ COVID-19 hhh4 Model\\Data\\OldData\\"
+fyl4  <- "IMD2013.csv"
+nzdep13<-read.csv(paste(path3,fyl4,sep=""), header=TRUE, sep=",")
 dim(nzdep13) # 5958   38
 summary(nzdep13)
 names13 <- names(nzdep13)

@@ -17,26 +17,26 @@ library(rlist) # For lis.append()
 library(spdep) # For polygon adjacency measure calculation
 # https://www.fmhs.auckland.ac.nz/en/soph/about/our-departments/epidemiology-and-biostatistics/research/hgd/research-themes/imd.html
 ### Downloaded csv file from above source (can we do this via the URL?)
-path3 <- "D:\\StatsNZ_Work\\Covid19\\cv19\\NZ COVID-19 hhh4 Model\\Data\\OldData\\"
+path3 <- "Data\\OldData\\"
 fyl4  <- "IMD2013.csv"
 nzdep13<-read.csv(paste(path3,fyl4,sep=""), header=TRUE, sep=",")
 dim(nzdep13) # 5958   38
 summary(nzdep13)
 names13 <- names(nzdep13)
 names13
-# [1] "DatazoneID"  "X2013URPop"  "TA2013"      "TA2013Name"  "GED2014"     "GED2014Name" "DHB12"      
-# [8] "DHB2012Name" "IMDRank"     "EmpRank"     "IncRank"     "CriRank"     "HouRank"     "HlthRank"   
-# [15] "EduRank"     "AccRank"     "IMDNoEmpR"   "IMDNoIncR"   "IMDNoCriR"   "IMDNoHouR"   "IMDNoHlthR" 
-# [22] "IMDNoEduR"   "IMDNoAccR"   "IMDRankD"    "EmpRankD"    "IncRankD"    "CriRankD"    "HouRankD"   
-# [29] "HlthRankD"   "EduRankD"    "AccRankD"    "IMDNoEmpD"   "IMDNoIncD"   "IMDNoCriD"   "IMDNoHouD"  
+# [1] "DatazoneID"  "X2013URPop"  "TA2013"      "TA2013Name"  "GED2014"     "GED2014Name" "DHB12"
+# [8] "DHB2012Name" "IMDRank"     "EmpRank"     "IncRank"     "CriRank"     "HouRank"     "HlthRank"
+# [15] "EduRank"     "AccRank"     "IMDNoEmpR"   "IMDNoIncR"   "IMDNoCriR"   "IMDNoHouR"   "IMDNoHlthR"
+# [22] "IMDNoEduR"   "IMDNoAccR"   "IMDRankD"    "EmpRankD"    "IncRankD"    "CriRankD"    "HouRankD"
+# [29] "HlthRankD"   "EduRankD"    "AccRankD"    "IMDNoEmpD"   "IMDNoIncD"   "IMDNoCriD"   "IMDNoHouD"
 # [36] "IMDNoHlthD"  "IMDNoEduD"   "IMDNoAccD"
 #
 ### Will we have aproblem with DHB names?:
 levels(nzdep13$DHB2012Name)
-# [1] "Auckland"           "Bay of Plenty"      "Canterbury"         "Capital and Coast"  "Counties Manukau"  
+# [1] "Auckland"           "Bay of Plenty"      "Canterbury"         "Capital and Coast"  "Counties Manukau"
 # [6] "Hawke's Bay"        "Hutt"               "Lakes"              "Midcentral"         "Nelson Marlborough"
-# [11] "Northland"          "South Canterbury"   "Southern"           "Tairawhiti"         "Taranaki"          
-# [16] "Waikato"            "Wairarapa"          "Waitemata"          "West Coast"         "Whanganui"  
+# [11] "Northland"          "South Canterbury"   "Southern"           "Tairawhiti"         "Taranaki"
+# [16] "Waikato"            "Wairarapa"          "Waitemata"          "West Coast"         "Whanganui"
 # Subsetting of data via keeps below not retained. Might come back to it sometime
 # keeps <- c("DatazoneID", "X2013URPop", "TA2013", "TA2013Name", "DHB12",
 #            "DHB2012Name", "IMDRank", "EmpRank", "IncRank", "CriRank",
@@ -61,7 +61,7 @@ dhbs_dep # Check
 # The data is at very detailed level, so summarise by DHB name
 nzdep13_grouped <- nzdep13 %>% group_by(DHB2012Name)
 dim(nzdep13_grouped) # 5958   38
-by_dhb <- nzdep13_grouped  %>% dplyr::summarise(avg_IMDRank = mean(IMDRank), 
+by_dhb <- nzdep13_grouped  %>% dplyr::summarise(avg_IMDRank = mean(IMDRank),
                                                 sum_IMDRank = sum(IMDRank),
                                                 popn_size   = sum(X2013URPop))
 ### Calculate and add on  on population proportions, as paper indicates these are used (...Frac)
@@ -116,7 +116,7 @@ map@data$DHB2015_Na <-row_order
 row.names(map)     <- row_order
 #
 ### measlesWeserEms <- sts(...)
-covidNZ <- sts(nz_counts_t, 
+covidNZ <- sts(nz_counts_t,
              start=c(2020,min_doy),
              population=populationFracRepeated,
              neighbourhood=nzrems_nbOrder,

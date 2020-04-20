@@ -50,7 +50,7 @@ map <- s.sp[s.sp@data$DHB2015_Co != "99",]
 class(map) # Check if still same "SpatialPolygonsDataFrame" class
 plot(map)  # Check if innards are still there
 # Save just in case (not required so far to reload)
-saveRDS(map, "SpatialPolygonsDataFrame.RData")
+# Let's not save this for now, .RData's are in .gitignore: saveRDS(map, "SpatialPolygonsDataFrame.RData")
 #
 ### weserems_adjmat
 ### Calculate the adajacency matrix

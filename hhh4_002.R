@@ -17,9 +17,9 @@ library(spdep) # For polygon adjacency measure calculation
 ### ordering, and other data read in will have to conform. This will be made
 ### obvious in any code.
 ### There are two residual DHB's in this file as well as the main 20
-path2 <- "D:\\StatsNZ_Work\\Covid19\\cv19\\NZ COVID-19 hhh4 Model\\Data\\OldData\\"
+path2 <- "Data\\OldData\\"
 fyl3  <- "district-health-board-2015.shp"
-dhb_shp<-st_read(paste(path2,fyl3,sep=""))
+dhb_shp<-st_read(paste0(path2,fyl3))
 str(dhb_shp)   # Yuk, better to use tibble's glimpse()
 plot(dhb_shp)  # Test if everything has made sense. If plots appear, prob OK.
 ### List the DHB names in the shp file and get rid of blanks

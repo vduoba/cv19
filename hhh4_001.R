@@ -14,11 +14,12 @@ library(surveillance)
 library(tidyverse)
 library(reshape2)
 library(plyr)
-#
-path1 <- "D:\\StatsNZ_Work\\Covid19\\cv19\\NZ COVID-19 hhh4 Model\\Data\\OldData\\"
+# Note ensuring working directory is local Git repo folder (ends with /cv19). Check using getwd(). Set using setwd(dir=)
+path1 <- "Data\\OldData\\"
 # fyl1  <- "covid-casedetails-update-6april_confirmed.csv" # Old
 fyl1    <- "covid-case_list-16-april_confirmed_vic.csv"        # Latest
-data1 <- read.csv(paste(path1,fyl1,sep=""),
+
+data1 <- read.csv(paste0(path1,fyl1),
                    header=TRUE,
                    stringsAsFactors=TRUE)
 dim(data1)   # 911   9   # ??? Old csv files, so update
@@ -26,7 +27,7 @@ names(data1)
 #
 # fyl2<-"covid-casedetails-update-6april_probable.csv"   # Old
 fyl2<-"covid-casedetails-update-6april_probable.csv"    # Latest
-data2 <- read.csv(paste(path1,fyl2,sep=""),,
+data2 <- read.csv(paste0(path1,fyl2),
                    header=TRUE,stringsAsFactors=TRUE)
 dim(data2)     # 195   9  # ??? Old csv files, so update
 names(data2)   # Check same as above
@@ -95,5 +96,3 @@ nz_counts_t <- dcast(df_fixed, formula=seq_dayte~DHB) # LHS stays, RHS flips
 str(nz_counts_t)
 # View(nz_counts_t)
 ############################################################################
-
-

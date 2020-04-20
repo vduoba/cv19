@@ -108,19 +108,16 @@ DateMin <- min(NZ_Covid19_All$DateOfReport)
 
 DateRange <- tibble(Date = seq.Date(DateMin, DateMax, by = "day"))
 
-# Join, clean, pivot wider
+# Join, clean
 
 NZ_Covid19 <- full_join(NZ_Covid19_Selected_Agg, DateRange, by = c("DateOfReport" = "Date")) %>%
   complete(DHB, nesting(DateOfReport), fill = list(NewCases = 0)) %>%
-  filter(!is.na(DHB)) %>%
-  group_by(DHB) %>%
-  mutate(CumsumCases = cumsum(NewCases))
+  filter(!is.na(DHB))
 
 # Finalizing for compatibility hhh4_002: nz_counts_t
 
 nz_counts_t <- NZ_Covid19 %>%
-  select(-NewCases) %>%
-  pivot_wider(., names_from = DHB, values_from = CumsumCases) %>%
+  pivot_wider(., names_from = DHB, values_from = NewCases) %>%
   mutate(DateOfReport = as.numeric(DateOfReport) - 18317) %>%
   rename(seq_dayte = DateOfReport)
 

@@ -13,9 +13,6 @@ dhb_shp_2012 <- st_read("Data\\GeospatialData\\DHB2012\\nz-district-health-board
   st_zm(.) %>%
   arrange(DHB12)
 
-dhb_shp_2012 %>%
-  arrange(DHB12)
-
 # Clean DHB name, verify
 
 dhb_shp_2012$NAME <- dhb_shp_2012$NAME %>%

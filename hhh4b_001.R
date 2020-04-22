@@ -16,15 +16,15 @@ library(reshape2)
 library(plyr)
 #
 path1 <- "D:\\StatsNZ_Work\\Covid19\\cv19\\NZ COVID-19 hhh4 Model\\Data\\OldData\\"
-fyl1  <- "covid-casedetails-update-6april_confirmed.csv"
-data1 <- read.csv(paste(path1,fyl1,sep=""),
+fyl1  <- "covid-case_list-16-april_confirmed_vic.csv"
+data1 <- read.csv(paste(path1,fyl1,sep=""), sep=",",
                    header=TRUE,
                    stringsAsFactors=TRUE)
 dim(data1)   # 911   9   # ??? Old csv files, so update
 names(data1) 
 #
-fyl2<-"covid-casedetails-update-6april_probable.csv"
-data2 <- read.csv(paste(path1,fyl2,sep=""),,
+fyl2<-"covid-case_list-16-april_probable_vic.csv"
+data2 <- read.csv(paste(path1,fyl2,sep=""),sep=",",
                    header=TRUE,stringsAsFactors=TRUE)
 dim(data2)     # 195   9  # ??? Old csv files, so update
 names(data2)   # Check same as above

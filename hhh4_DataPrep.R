@@ -9,6 +9,14 @@ library(httr)
 library(readxl)
 library(janitor)
 
+library(dplyr)
+library(readxl)
+library(surveillance)
+library(sf)
+library(stringr)
+library(spdep)
+
+
 # Scrape latest DataURL and DataFilename
 
 DataPage <- read_html("https://www.health.govt.nz/our-work/diseases-and-conditions/covid-19-novel-coronavirus/covid-19-current-situation/covid-19-current-cases/covid-19-current-cases-details")
@@ -122,3 +130,78 @@ nz_counts_t <- NZ_Covid19 %>%
   rename(seq_dayte = DateOfReport)
 
 ## Optional: clear unneeded objects: rm(list=setdiff(ls(), "nz_counts_t"))
+
+##################### 002
+
+# Pull map file, remove Z co-ordinates, fix ordering
+
+dhb_shp <- st_read("Data\\GeospatialData\\DHB2012\\nz-district-health-boards-2012.shp") %>%
+  st_zm(.) %>%
+  arrange(DHB12)
+
+# Clean DHB name, verify
+
+dhb_shp$NAME <- dhb_shp$NAME %>%
+  str_replace_all(c(" |'" = "", "Hutt" = "HuttValley", "Midcentral" = "MidCentral"))
+
+ExpectedDHBs <- read_excel("Data\\StandardisedNames.xlsx", sheet = "DHB") %>%
+  select(DHB)
+
+identical(dhb_shp$NAME, ExpectedDHBs$DHB)
+
+# Create R Map
+
+map <- as(dhb_shp, "Spatial")
+## Optional visual check: plot(map)
+
+# Calc adjacency matrix and nbOrder matrix
+
+nzrems_adjmat <- poly2adjmat(map, row.names = ExpectedDHBs$DHB)
+
+colnames(nzrems_adjmat) <- ExpectedDHBs$DHB
+
+nzrems_nbOrder <- nbOrder(nzrems_adjmat, maxlag=Inf)
+
+# Finalizing
+row.names(map) <- pull(ExpectedDHBs)
+
+nz_counts_t <- nz_counts_t %>%
+  select(-seq_dayte) %>%
+  select(order(ExpectedDHBs$DHB, decreasing = TRUE))
+
+nz_counts_t %>% select(ExpectedDHBs$DHB)
+
+nz_counts_t <- nz_counts_t %>%
+  select(ExpectedDHBs$DHB)
+
+
+
+##################### 003 and 004
+
+# Pull new pop data, calc proportion
+
+DHB_Pop_2019 <- read_excel("Data\\DHBData\\DHBPopulation.xlsx") %>%
+  mutate(PopulationProportion = Population / sum(Population))
+
+# Matricize
+
+populationFrac <- DHB_Pop_2019 %>%
+  select(DHB, PopulationProportion) %>%
+  pivot_wider(., names_from = DHB, values_from = PopulationProportion)
+
+populationFracRepeated <- populationFrac %>%
+  uncount(., as.integer(DateMax - DateMin + 1))
+
+nz_counts_t <- as.matrix(nz_counts_t)
+populationFracRepeated <- as.matrix(populationFracRepeated)
+
+# Surveillance Time Series
+
+covidNZ <- sts(nz_counts_t,
+               start=c(lubridate::year(DateMin), yday(DateMin)),
+               population=(populationFracRepeated),
+               neighbourhood=nzrems_nbOrder,
+               frequency=365,
+               map=map)
+
+plot(covidNZ)

@@ -101,6 +101,43 @@ ndx_worrying <- ndx[16:28]
 model_worrying <- lm(ts_worrying~1+ndx_worrying)
 summary(model_worrying) # 3.8852 for rate of change over steepest deterioration
 #########################################################################
+### Try the R0 package to calculate R0 (time-dependent or during epidemic acceleration)
+library(R0)
+epid.count <- as.integer(ts_dat) # For now, use the predicted vals from loess smooth
+# Create the generation time, gamma distn with mean 2.6 time units and sd 1
+GT.covid19 <- generation.time("gamma", c(5.04, 1))
+## Reproduction number estimate using  Exponential Growth  method.
+res.R_EG <- estimate.R(epid.count, GT=GT.covid19,
+                    methods=c("EG"))
+plot(res.R_EG)
+plotfit(res.R_EG)
+#
+## Reproduction number estimate using  Time-Dependent  method.
+res.R_TD <- estimate.R(epid.count, GT=GT.covid19,
+                       methods=c("TD"))
+plot(res.R_TD)
+plotfit(res.R_TD)
+#
+## Reproduction number estimate using  Sequential Bayesian  method.
+res.R_SB <- estimate.R(epid.count+1, GT=GT.covid19,
+                       methods=c("SB"), nsim=100)
+plot(res.R_SB)
+plotfit(res.R_SB)
+#
+## Reproduction number estimate using  Maximum Likelihood  method.
+## Have to add a number to each obs to make it work
+res.R_ML <- estimate.R(epid.count[10:51]+1, GT=GT.covid19,
+                       methods=c("ML"))
+plot(res.R_ML)
+plotfit(res.R_ML)
+#
+## Reproduction number estimate using  Attack Rate  method.
+res.R_AR <- estimate.R(epid.count, GT=GT.covid19,
+                       methods=c("AR"), AR=0.999,
+                       pop.size=5000000)
+plot(res.R_AR)
+plotfit(res.R_AR)
+#########################################################################
 ### Time-averaged proportions of the means explianed by
 ### the different components
 colSums(fitted_components$Overall)[3:5]/sum(fitted_components$Overall[,1])

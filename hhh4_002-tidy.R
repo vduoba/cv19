@@ -37,8 +37,8 @@ colnames(nzrems_adjmat_2012) <- ExpectedDHBs$DHB
 nzrems_nbOrder_2012 <- nbOrder(nzrems_adjmat_2012, maxlag=Inf)
 
 ## Temporary: Checks against values from hhh4_002-CompareOutputs.R
-identical(nzrems_adjmat_2012, nzrems_adjmat)
-identical(nzrems_nbOrder_2012, nzrems_nbOrder)
+# identical(nzrems_adjmat_2012, nzrems_adjmat)
+# identical(nzrems_nbOrder_2012, nzrems_nbOrder)
 ## Haha. At least our plots will look better.
 
 # Finalizing. Maintaining _2012 on name for now

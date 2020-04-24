@@ -1,6 +1,6 @@
-### hhh4_005.R
+# Models outputs from hhh4_DataPrep
+
 ### Section 3 Basic Model Fitting
-### Assumes hh4_001-4.R results available
 ### MeaslesModel_basic <- list(.....)
 library(tidyverse)
 library(ggplot2)
@@ -13,57 +13,57 @@ covid19Model_basic<-list(
   family="NegBin1" )
 #
 ### Check adjacencies in the preceding formula
-neighbourhood(covidNZ)==1 
+neighbourhood(covidNZ)==1
 #
 ### MeaslesFit_basic <- hh4(stsObj)
 covid19Fit_basic <- hhh4(stsObj=covidNZ, control=covid19Model_basic)
 ### Summary:
 ### summary(measlesFit_basic ...)
-summary(covid19Fit_basic, 
-        idx2Exp=TRUE, 
-        amplitudeShift=FALSE, 
+summary(covid19Fit_basic,
+        idx2Exp=TRUE,
+        amplitudeShift=FALSE,
         maxEV=TRUE )
 ### 6april data ##################################################
-# Call: 
+# Call:
 #   hhh4(stsObj = covidNZ, control = covid19Model_basic)
-# 
+#
 # Coefficients:
 #             Estimate  Std. Error
-# exp(ar.1)   0.802201  0.069331  
-# exp(ne.1)   0.005455  0.010990  
-# exp(end.1)  0.025461  0.007137  
-# exp(end.t)  1.107864  0.011964  
-# overdisp    0.700287  0.109541  
-# 
-# Epidemic dominant eigenvalue:  0.82 
-# 
-# Log-likelihood:   -815.14 
-# AIC:              1640.29 
-# BIC:              1663.58 
-# 
-# Number of units:        20 
-# Number of time points:  39 
+# exp(ar.1)   0.802201  0.069331
+# exp(ne.1)   0.005455  0.010990
+# exp(end.1)  0.025461  0.007137
+# exp(end.t)  1.107864  0.011964
+# overdisp    0.700287  0.109541
+#
+# Epidemic dominant eigenvalue:  0.82
+#
+# Log-likelihood:   -815.14
+# AIC:              1640.29
+# BIC:              1663.58
+#
+# Number of units:        20
+# Number of time points:  39
 ### exp(end.1) is the rate at which the basic epidemic incidence increases per day.
 #
 ### 16april data ###############################################
-# Call: 
+# Call:
 #     hhh4(stsObj = covidNZ, control = covid19Model_basic)
-# 
+#
 # Coefficients:
 #     Estimate  Std. Error
-# exp(ar.1)   0.766395  0.064878  
-# exp(ne.1)   0.047719  0.011434  
-# exp(end.1)  0.056493  0.013972  
-# exp(end.t)  1.038308  0.007495  
-# overdisp    0.980477  0.128128  
-# 
-# Epidemic dominant eigenvalue:  0.96 
-# 
-# Log-likelihood:   -1062.11 
-# AIC:              2134.22 
-# BIC:              2158.76 
-# 
-# Number of units:        20 
+# exp(ar.1)   0.766395  0.064878
+# exp(ne.1)   0.047719  0.011434
+# exp(end.1)  0.056493  0.013972
+# exp(end.t)  1.038308  0.007495
+# overdisp    0.980477  0.128128
+#
+# Epidemic dominant eigenvalue:  0.96
+#
+# Log-likelihood:   -1062.11
+# AIC:              2134.22
+# BIC:              2158.76
+#
+# Number of units:        20
 # Number of time points:  50
 ####################################################################
 ### No plot(measlesFit_basic, type="season",...) as series is a short daily series.
@@ -88,10 +88,10 @@ ts_dat <- fitted_components$Overall[,"epidemic"]
 ggAcf(ts_dat)
 plot(ts_dat, type="l")
 ndx<-1:length(ts_dat)
-loessMod <- loess(ts_dat~ ndx, span=0.40) 
-smoothed <- predict(loessMod) 
-plot(ts_dat, x=ndx, type="l", 
-     main="Loess Smoothed Cov19 Cases", 
+loessMod <- loess(ts_dat~ ndx, span=0.40)
+smoothed <- predict(loessMod)
+plot(ts_dat, x=ndx, type="l",
+     main="Loess Smoothed Cov19 Cases",
      xlab="DayNbr", ylab="Cov19 Cases",
      lwd=2)
 lines(smoothed, x=ndx, col="blue", lwd = 2)
@@ -104,8 +104,8 @@ summary(model_worrying) # 3.8852 for rate of change over steepest deterioration
 ### Time-averaged proportions of the means explianed by
 ### the different components
 colSums(fitted_components$Overall)[3:5]/sum(fitted_components$Overall[,1])
-###  endemic          epi.own epi.neighbours 
-### 0.24648895     0.73952867     0.01398238  
+###  endemic          epi.own epi.neighbours
+### 0.24648895     0.73952867     0.01398238
 ###
 ### NegBin1 under/overdispersion parameter
 confint(covid19Fit_basic, parm="overdisp")

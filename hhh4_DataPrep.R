@@ -1,4 +1,4 @@
-# Verbose error checking as data location and structure is volatile
+# Pulls latest case data as well as DHB spatial and population data. Processes it into appropiate inputs for plotting and modelling.
 
 library(dplyr)
 library(tidyr)
@@ -8,16 +8,12 @@ library(rvest)
 library(httr)
 library(readxl)
 library(janitor)
-
-library(dplyr)
-library(readxl)
 library(surveillance)
-library(sf)
-library(stringr)
-library(spdep)
+#library(sf)
+#library(spdep)
 
 
-# Scrape latest DataURL and DataFilename
+# Scrape latest DataURL and DataFilename.Verbose error checking here as data location and structure is volatile
 
 DataPage <- read_html("https://www.health.govt.nz/our-work/diseases-and-conditions/covid-19-novel-coronavirus/covid-19-current-situation/covid-19-current-cases/covid-19-current-cases-details")
 
@@ -52,11 +48,12 @@ if (length(DataURL) == 1 & str_sub(DataFilename, -5, -1) == ".xlsx") {
   DataPath <- NULL
 }
 
-
-# Import Data, bind sheets, clean ColNames, verify structure as expected
+# Pull latest Case Data, bind sheets, clean ColNames, verify structure as expected
 
 ExpectedSheets <- c("Confirmed", "Probable")
 ExpectedCols <- c("DateOfReport", "Sex", "AgeGroup", "DHB", "OverseasTravel", "LastCountryBeforeReturn", "FlightNumber", "FlightDepartureDate", "ArrivalDate")
+ExpectedDHBs <- read_excel("Data\\StandardisedNames.xlsx", sheet = "DHB") %>%
+  select(DHB)
 
 if (identical(excel_sheets(DataPath), ExpectedSheets)) {
   NZ_Covid19_Confirmed <- read_excel(DataPath, sheet = "Confirmed", skip = 3)
@@ -81,13 +78,16 @@ if (identical(colnames(NZ_Covid19_All), ExpectedCols)) {
 
 # Clean values, verify, select, aggregate, sort
 
-####### Consider trimming white space:
+NZ_Covid19_All$DHB <- gsub(" |'", "", NZ_Covid19_All$DHB)
 
-NZ_Covid19_All$DHB <- gsub(" ", "", NZ_Covid19_All$DHB)
-NZ_Covid19_All$DHB <- gsub("'", "", NZ_Covid19_All$DHB)
+if (identical(sort(unique(NZ_Covid19_All$DHB)), sort(ExpectedDHBs$DHB))) {
+  print("PASSED DHB names test")
+} else {
+  print("ERROR DHB names exception")
+  sort(unique(NZ_Covid19$DHB_All)) == sort(ExpectedDHBs$DHB)
+}
 
-## TO DO: make below a test
-## sort(unique(NZ_Covid19$DHB)
+## Consider trimming white space
 
 NZ_Covid19_All$DateOfReport <- dmy(NZ_Covid19_All$DateOfReport)
 
@@ -100,7 +100,7 @@ NZ_Covid19_Selected_Agg <- NZ_Covid19_Selected %>%
 
 # Create DateRange Tibble
 
-## Need to discuss issues with what DateMax to use - Perhaps prudent to use cell A2 - 1 or 2 days.
+## Need to discuss issues with what DateMax to use - Perhaps prudent to use cell A2 - 1 or 2 days
 DateMax <- as.vector(read_excel(DataPath, sheet = "Confirmed", "A2", col_names = "Date")) %>%
   pull(., Date) %>%
   as_date(.)
@@ -122,68 +122,21 @@ NZ_Covid19 <- full_join(NZ_Covid19_Selected_Agg, DateRange, by = c("DateOfReport
   complete(DHB, nesting(DateOfReport), fill = list(NewCases = 0)) %>%
   filter(!is.na(DHB))
 
-# Finalizing for compatibility hhh4_002: nz_counts_t
+# Pivot Wide. Finalize.
 
-nz_counts_t <- NZ_Covid19 %>%
+NZ_Covid19.wide <- NZ_Covid19 %>%
   pivot_wider(., names_from = DHB, values_from = NewCases) %>%
-  mutate(DateOfReport = as.numeric(DateOfReport) - 18317) %>%
-  rename(seq_dayte = DateOfReport)
+  mutate(seq_dayte = as.numeric(DateOfReport) - 18317)
 
-## Optional: clear unneeded objects: rm(list=setdiff(ls(), "nz_counts_t"))
 
-##################### 002
-
-# Pull map file, remove Z co-ordinates, fix ordering
-
-dhb_shp <- st_read("Data\\GeospatialData\\DHB2012\\nz-district-health-boards-2012.shp") %>%
-  st_zm(.) %>%
-  arrange(DHB12)
-
-# Clean DHB name, verify
-
-dhb_shp$NAME <- dhb_shp$NAME %>%
-  str_replace_all(c(" |'" = "", "Hutt" = "HuttValley", "Midcentral" = "MidCentral"))
-
-ExpectedDHBs <- read_excel("Data\\StandardisedNames.xlsx", sheet = "DHB") %>%
-  select(DHB)
-
-identical(dhb_shp$NAME, ExpectedDHBs$DHB)
-
-# Create R Map
-
-map <- as(dhb_shp, "Spatial")
-## Optional visual check: plot(map)
-
-# Calc adjacency matrix and nbOrder matrix
-
-nzrems_adjmat <- poly2adjmat(map, row.names = ExpectedDHBs$DHB)
-
-colnames(nzrems_adjmat) <- ExpectedDHBs$DHB
-
-nzrems_nbOrder <- nbOrder(nzrems_adjmat, maxlag=Inf)
-
-# Finalizing
-row.names(map) <- pull(ExpectedDHBs)
-
-nz_counts_t <- nz_counts_t %>%
-  select(-seq_dayte) %>%
-  select(order(ExpectedDHBs$DHB, decreasing = TRUE))
-
-nz_counts_t %>% select(ExpectedDHBs$DHB)
-
-nz_counts_t <- nz_counts_t %>%
+nz_counts_t <- NZ_Covid19.wide %>%
   select(ExpectedDHBs$DHB)
 
-
-
-##################### 003 and 004
-
-# Pull new pop data, calc proportion
+# Pull pop data [static], calc proportion
+## To do: Deprevation data
 
 DHB_Pop_2019 <- read_excel("Data\\DHBData\\DHBPopulation.xlsx") %>%
   mutate(PopulationProportion = Population / sum(Population))
-
-# Matricize
 
 populationFrac <- DHB_Pop_2019 %>%
   select(DHB, PopulationProportion) %>%
@@ -192,8 +145,15 @@ populationFrac <- DHB_Pop_2019 %>%
 populationFracRepeated <- populationFrac %>%
   uncount(., as.integer(DateMax - DateMin + 1))
 
+# Matricize
+
 nz_counts_t <- as.matrix(nz_counts_t)
+mode(nz_counts_t) <- "integer"
 populationFracRepeated <- as.matrix(populationFracRepeated)
+
+# Pull map data [static]
+
+load("Data\\GeospatialData\\DHB2012\\Shapefile_Processed.Rdata", verbose = TRUE)
 
 # Surveillance Time Series
 
@@ -205,3 +165,5 @@ covidNZ <- sts(nz_counts_t,
                map=map)
 
 plot(covidNZ)
+
+## OPTIONAL: Remove unnecessary objects: rm(list = c(str_subset(objects(), "NZ_Covid19_.|Data.|Expected[C|S]")))

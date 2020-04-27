@@ -146,11 +146,11 @@ populationFrac <- DHB_Pop_2019 %>%
 populationFracRepeated <- populationFrac %>%
   uncount(., as.integer(DateMax - DateMin + 1))
 
-populationOrig <- DHB_Pop_2019 %>%
+population_m <- DHB_Pop_2019 %>%
   select(DHB, Population) %>%
   pivot_wider(., names_from = DHB, values_from = Population)
 
-populationOrigRepeated <- populationOrig %>%
+population_mRepeated <- population_m %>%
   uncount(., as.integer(DateMax - DateMin + 1))
 
 # Matricize
@@ -158,7 +158,7 @@ populationOrigRepeated <- populationOrig %>%
 nz_counts_t <- as.matrix(nz_counts_t)
 mode(nz_counts_t) <- "integer"
 populationFracRepeated <- as.matrix(populationFracRepeated)
-populationOrigRepeated <- as.matrix(populationOrigRepeated)
+population_mRepeated<- as.matrix(population_mRepeated)
 
 # Pull map data [static]
 

@@ -4,7 +4,7 @@
 plot(covidNZ, type=observed~time) # All regions combined.
 # NZ map with count numbers chloropleth
 plot(covidNZ, type=observed~unit,
-     population=popn_mRepeated / 100000,
+     population=population_mRepeated / 100000,
      labels=list(font=1, cex=0.6), colorkey=list(space="right"),
      sp.layout=layout.scalebar(covidNZ@map,corner=c(0.75,0.05),
                                scale=50000,

@@ -115,8 +115,10 @@ likelihoods <- tibble(day = seq_along(k) - 1, k = k) %>%
     # Ignore the 0th day
     filter(day > 0) %>%
     # Unnest the data to flatten it.
-    select(-lambda) %>%
-    unnest(r_t, likelihood_r_t) # not unnest(c(r_t, likelihood_r_t))
+    dplyr::select(-lambda) %>%
+    # unnest(c(r_t, likelihood_r_t))
+    unnest(r_t, likelihood_r_t)
+    # not unnest(c(r_t, likelihood_r_t
 
 # display_random(likelihoods)
 dim(likelihoods) # 10809     4
@@ -171,7 +173,7 @@ estimates <- posteriors %>%
         r_t_lo = map_dbl(r_t_simulated, ~ hdi(.x)[1]),
         r_t_hi = map_dbl(r_t_simulated, ~ hdi(.x)[2])
     ) %>%
-    select(-r_t_simulated)
+    dplyr::select(-r_t_simulated)
 
 # display_head(estimates)
 head(estimates)
@@ -217,7 +219,7 @@ smooth_new_cases <- function(cases){
     mutate(new_cases_smooth = round(
       smoother::smth(new_cases, window = 7, tails = TRUE)
     )) %>%
-    select(state, date, new_cases, new_cases_smooth)
+    dplyr::select(state, date, new_cases, new_cases_smooth)
 }
 #
 # state_selected <- "Auckland"
@@ -236,7 +238,7 @@ smooth_new_cases <- function(cases){
 # state_selected   <-"Tairawhiti"
 # state_selected   <-"Taranaki"
 # state_selected   <-"Waikato"
-# tate_selected   <-"Wairarapa"
+# state_selected   <-"Wairarapa"
 # state_selected   <-"Waitemata"
 # state_selected   <-"WestCoast" # Does not work for WestCoast
 state_selected   <-"Whanganui"
@@ -290,7 +292,7 @@ compute_likelihood <- function(cases){
       likelihood_r_t = map2(new_cases_smooth, lambda, dpois, log = TRUE)
     ) %>%
     slice(-1) %>%
-    select(-lambda) %>%
+    sdplyr::elect(-lambda) %>%
     unnest(c(likelihood_r_t, r_t))
 }
 #
@@ -317,7 +319,7 @@ compute_posterior <- function(likelihood){
     # HACK: NaNs in the posterior create issues later on. So we remove them.
     mutate(posterior = ifelse(is.nan(posterior), 0, posterior)) %>%
     ungroup() %>%
-    select(-likelihood_r_t)
+    sdplyr::elect(-likelihood_r_t)
 }
 #
 covid_cases %>%
@@ -369,7 +371,7 @@ estimate_rt <- function(posteriors){
       r_t_lo = map_dbl(r_t_simulated, ~ hdi(.x)[1]),
       r_t_hi = map_dbl(r_t_simulated, ~ hdi(.x)[2])
     ) %>%
-    select(-r_t_simulated)
+    sdplyr::elect(-r_t_simulated)
 }
 #
 covid_cases %>%
@@ -509,10 +511,4 @@ estimates_all %>%
   theme(axis.text.x.bottom = element_text(angle = 90, hjust = 1, vjust = 0.5))
 options(repr.plot.width = 12, repr.plot.height = 5)
 #
-# check<-covid_cases %>%
-#   filter(state == "WestCoast")
-# View(check)
-
-k =  c(5, 10, 20, 30, 40, 50, 60, 70, 80, 90)
 #
-L <- tibble(day = seq_along(k) - 1, k = k)

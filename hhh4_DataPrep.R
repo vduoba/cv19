@@ -79,6 +79,7 @@ if (identical(colnames(NZ_Covid19_All), ExpectedCols)) {
 # Clean values, verify, select, aggregate, sort
 
 NZ_Covid19_All$DHB <- gsub(" |'", "", NZ_Covid19_All$DHB)
+NZ_Covid19_All$DHB <- enc2native(NZ_Covid19_All$DHB)
 
 if (identical(sort(unique(NZ_Covid19_All$DHB)), sort(ExpectedDHBs$DHB))) {
   print("PASSED DHB names test")
@@ -145,11 +146,19 @@ populationFrac <- DHB_Pop_2019 %>%
 populationFracRepeated <- populationFrac %>%
   uncount(., as.integer(DateMax - DateMin + 1))
 
+population_m <- DHB_Pop_2019 %>%
+  select(DHB, Population) %>%
+  pivot_wider(., names_from = DHB, values_from = Population)
+
+population_mRepeated <- population_m %>%
+  uncount(., as.integer(DateMax - DateMin + 1))
+
 # Matricize
 
 nz_counts_t <- as.matrix(nz_counts_t)
 mode(nz_counts_t) <- "integer"
 populationFracRepeated <- as.matrix(populationFracRepeated)
+population_mRepeated<- as.matrix(population_mRepeated)
 
 # Pull map data [static]
 

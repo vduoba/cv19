@@ -113,7 +113,7 @@ plot(res.R_EG)
 plotfit(res.R_EG)
 #
 ## Reproduction number estimate using  Time-Dependent  method.
-res.R_TD <- estimate.R(epid.count, GT=GT.covid19,
+res.R_TD <- estimate.R(epid.count+1, GT=GT.covid19,
                        methods=c("TD"))
 plot(res.R_TD)
 plotfit(res.R_TD)

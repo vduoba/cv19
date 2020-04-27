@@ -2,7 +2,6 @@
 
 ### Section 3 Basic Model Fitting
 ### MeaslesModel_basic <- list(.....)
-library(tidyverse)
 library(ggplot2)
 library(forecast) # For ggAcf
 covid19Model_basic<-list(
@@ -75,6 +74,7 @@ plot(covid19Fit_basic, type="fitted", units=dhbs_to_plot,
      hide0s=TRUE, par.settings=NULL, legend=1)
 plot(covid19Fit_basic, type="fitted", total=TRUE,
      hide0s=TRUE, par.settings=NULL, legend=FALSE) -> fitted_components
+par(mfrow=c(1,1))
 ### Orange is spatiotemporal component
 ### Blue is autoregressive (dominant)
 ### Light grey is endemic component (at base of each plot, and very small
@@ -108,12 +108,12 @@ epid.count <- as.integer(ts_dat) # For now, use the predicted vals from loess sm
 GT.covid19 <- generation.time("gamma", c(5.04, 1))
 ## Reproduction number estimate using  Exponential Growth  method.
 res.R_EG <- estimate.R(epid.count, GT=GT.covid19,
-                    methods=c("EG"))
+                       methods=c("EG"))
 plot(res.R_EG)
 plotfit(res.R_EG)
 #
 ## Reproduction number estimate using  Time-Dependent  method.
-res.R_TD <- estimate.R(epid.count, GT=GT.covid19,
+res.R_TD <- estimate.R(epid.count+1, GT=GT.covid19,
                        methods=c("TD"))
 plot(res.R_TD)
 plotfit(res.R_TD)
@@ -138,7 +138,7 @@ res.R_AR <- estimate.R(epid.count, GT=GT.covid19,
 plot(res.R_AR)
 plotfit(res.R_AR)
 #########################################################################
-### Time-averaged proportions of the means explianed by
+### Time-averaged proportions of the means explained by
 ### the different components
 colSums(fitted_components$Overall)[3:5]/sum(fitted_components$Overall[,1])
 ###  endemic          epi.own epi.neighbours
@@ -160,4 +160,3 @@ AIC(covid19Fit_basic, update(covid19Fit_basic, family="Poisson"))
 #
 ############################################################################
 # http://faculty.washington.edu/skalski/classes/QERM597/papers_xtra/Burnham%20and%20Anderson.pdf
-#

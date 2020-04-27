@@ -3,14 +3,14 @@
 ### plot(measlesWeserEms(, type=...))
 plot(covidNZ, type=observed~time) # All regions combined.
 # NZ map with count numbers chloropleth
-plot(covidNZ, type=observed~unit,
-     population=popn_mRepeated / 100000,
-     labels=list(font=1, cex=0.6), colorkey=list(space="right"),
-     sp.layout=layout.scalebar(covidNZ@map,corner=c(0.75,0.05),
-                               scale=50000,
-                               labels=c("0","50 km"),
-                               cex=0.5,
-                               height=0.05))
+plot(covidNZ, type  = observed~unit,
+     population     = populationOrigRepeated / 100000, # Does this variabledo anything?
+     labels         = list(font=1, cex=0.6), colorkey=list(space="right"),
+     sp.layout      = layout.scalebar(covidNZ@map,corner=c(0.75,0.05),
+                                      scale=50000,
+                                      labels=c("0","50 km"),
+                                      cex=0.5,
+                                      height=0.05))
 #
 # Are there any 0 plots? (No!)
 autoplot.sts(covidNZ, unit=which(colSums(observed(covidNZ))>0)) # Get all 20 plots!!!
@@ -21,4 +21,3 @@ autoplot.sts(covidNZ, unit=which(colSums(observed(covidNZ))>0)) # Get all 20 plo
 #                     ani.width=500, ani.height=600)
 #
 ####################################################################################
-

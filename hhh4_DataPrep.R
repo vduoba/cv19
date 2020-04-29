@@ -53,7 +53,7 @@ if (length(DataURL) == 1 & str_sub(DataFilename, -5, -1) == ".xlsx") {
 ExpectedSheets <- c("Confirmed", "Probable")
 ExpectedCols <- c("DateOfReport", "Sex", "AgeGroup", "DHB", "OverseasTravel", "LastCountryBeforeReturn", "FlightNumber", "FlightDepartureDate", "ArrivalDate")
 ExpectedDHBs <- read_excel("Data\\StandardisedNames.xlsx", sheet = "DHB") %>%
-  select(DHB)
+  dplyr::select(DHB)
 
 if (identical(excel_sheets(DataPath), ExpectedSheets)) {
   NZ_Covid19_Confirmed <- read_excel(DataPath, sheet = "Confirmed", skip = 3)
@@ -93,7 +93,7 @@ if (identical(sort(unique(NZ_Covid19_All$DHB)), sort(ExpectedDHBs$DHB))) {
 NZ_Covid19_All$DateOfReport <- dmy(NZ_Covid19_All$DateOfReport)
 
 NZ_Covid19_Selected <- NZ_Covid19_All %>%
-  select("DHB", "DateOfReport")
+  dplyr::select("DHB", "DateOfReport")
 
 NZ_Covid19_Selected_Agg <- NZ_Covid19_Selected %>%
   count(DHB, DateOfReport, name = "NewCases") %>%
@@ -131,7 +131,7 @@ NZ_Covid19.wide <- NZ_Covid19 %>%
 
 
 nz_counts_t <- NZ_Covid19.wide %>%
-  select(ExpectedDHBs$DHB)
+  dplyr::select(ExpectedDHBs$DHB)
 
 # Pull pop data [static], calc proportion
 ## To do: Deprevation data
@@ -140,14 +140,14 @@ DHB_Pop_2019 <- read_excel("Data\\DHBData\\DHBPopulation.xlsx") %>%
   mutate(PopulationProportion = Population / sum(Population))
 
 populationFrac <- DHB_Pop_2019 %>%
-  select(DHB, PopulationProportion) %>%
+  dplyr::select(DHB, PopulationProportion) %>%
   pivot_wider(., names_from = DHB, values_from = PopulationProportion)
 
 populationFracRepeated <- populationFrac %>%
   uncount(., as.integer(DateMax - DateMin + 1))
 
 population_m <- DHB_Pop_2019 %>%
-  select(DHB, Population) %>%
+  dplyr::select(DHB, Population) %>%
   pivot_wider(., names_from = DHB, values_from = Population)
 
 population_mRepeated <- population_m %>%

@@ -138,7 +138,7 @@ res.R_AR <- estimate.R(epid.count, GT=GT.covid19,
 plot(res.R_AR)
 plotfit(res.R_AR)
 #########################################################################
-### Time-averaged proportions of the means explianed by
+### Time-averaged proportions of the means explained by
 ### the different components
 colSums(fitted_components$Overall)[3:5]/sum(fitted_components$Overall[,1])
 ###  endemic          epi.own epi.neighbours

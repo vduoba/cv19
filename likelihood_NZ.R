@@ -103,7 +103,7 @@ GAMMA = 1/4
 
 # New cases by day
 # k =  c(20, 40, 55, 90)
-k =  c(5, 10, 20, 30, 40, 50, 60, 70, 80, 90)
+k =  c(1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150)
 #
 likelihoods <- tibble(day = seq_along(k) - 1, k = k) %>%
   # Compute a vector of likelihoods
@@ -193,6 +193,7 @@ head(estimates)
 # display_head(estimates)
 # ############################################################################
 # Apply to NZ data
+# ############################################################################
 covid_cases <- NZ_Covid19
 names(covid_cases) # "DHB"  "DateOfReport" "NewCases"
 names(covid_cases) <- c("state", "date", "cases")
@@ -222,32 +223,40 @@ smooth_new_cases <- function(cases){
     dplyr::select(state, date, new_cases, new_cases_smooth)
 }
 #
-state_selected <- "Auckland"
-# state_selected <- "BayofPlenty"
-# state_selected   <-"Canterbury"
-# state_selected   <-"CapitalandCoast"
-# state_selected   <-"CountiesManukau"
-# state_selected   <-"HawkesBay"
-# state_selected   <-"HuttValley"
-# state_selected   <-"Lakes"
-# state_selected   <-"MidCentral"
-# state_selected   <-"NelsonMarlborough"
-# state_selected   <-"Northland"
-# state_selected   <-"SouthCanterbury"
-# state_selected   <-"Southern"
-# state_selected   <-"Tairawhiti"
-# state_selected   <-"Taranaki"
-# state_selected   <-"Waikato"
-# state_selected   <-"Wairarapa"
-# state_selected   <-"Waitemata"
-# state_selected   <-"WestCoast" # Does not work for WestCoast
-# state_selected   <-"Whanganui"
+# r_t_range is a vector of possible values for R_t
+# Have to be careful with R_T_max as if set too high
+# for DHB-level counts, the likelihoods will be so
+# small that estimate_rt() will fail.
+R_T_MAX = 6
+r_t_range = seq(0, R_T_MAX, length = R_T_MAX*100 + 1)
+nan_offset=0.000000001 # Some posteriors evaluate to nan and 0's won't work
 #
-covid_cases %>%
-  filter(state == state_selected) %>%
-  smooth_new_cases() %>%
-  head(30)
-#display_head()
+state_selected <- "Auckland"
+state_selected <- "BayofPlenty"
+state_selected   <-"Canterbury"
+state_selected   <-"CapitalandCoast"
+state_selected   <-"CountiesManukau"
+state_selected   <-"HawkesBay"
+state_selected   <-"HuttValley"
+state_selected   <-"Lakes"
+state_selected   <-"MidCentral"
+state_selected   <-"NelsonMarlborough"
+state_selected   <-"Northland"
+state_selected   <-"SouthCanterbury"
+state_selected   <-"Southern"
+state_selected   <-"Tairawhiti"
+state_selected   <-"Taranaki"
+state_selected   <-"Waikato"
+state_selected   <-"Wairarapa"
+state_selected   <-"Waitemata"
+state_selected   <-"WestCoast" # Does not work for WestCoast
+state_selected   <-"Whanganui"
+#
+# covid_cases %>%
+#   filter(state == state_selected) %>%
+#   smooth_new_cases() %>%
+#   head(30)
+# #display_head()
 #
 # Note that we will implement all data processing steps as standalone functions.
 # While this adds some overhead, it will allow us to compose these steps cleanly,
@@ -285,7 +294,7 @@ covid_cases %>%
 # The design pattern used here is very useful in many situations.
 compute_likelihood <- function(cases){
   likelihood <- cases %>%
-    filter(new_cases_smooth > 0) %>%
+    #filter(new_cases_smooth > 0) %>%
     mutate(
       r_t = list(r_t_range),
       lambda = map(lag(new_cases_smooth, 1), ~ .x * exp(GAMMA * (r_t_range - 1))),
@@ -296,17 +305,18 @@ compute_likelihood <- function(cases){
     unnest(c(likelihood_r_t, r_t))
 }
 #
-covid_cases %>%
-  filter(state == state_selected) %>%
-  smooth_new_cases() %>%
-  compute_likelihood() %>%
-  head()
-#display_random()
+# covid_cases %>%
+#   filter(state == state_selected) %>%
+#   smooth_new_cases() %>%
+#   compute_likelihood() %>%
+#   head()
+# #display_random()
 #
 # The third step is to compute the posterior probabilities
 # We can use the rollapplyr function from the zoo package to compute a rolling
 # 7-day sum of the log likelihoods, and then exponentiate it to compute the
 # posterior. Finally, we normalize the posteriors to 1.0.
+
 compute_posterior <- function(likelihood){
   likelihood %>%
     arrange(date) %>%
@@ -317,18 +327,19 @@ compute_posterior <- function(likelihood){
     group_by(date) %>%
     mutate(posterior = posterior / sum(posterior, na.rm = TRUE)) %>%
     # HACK: NaNs in the posterior create issues later on. So we remove them.
-    mutate(posterior = ifelse(is.nan(posterior), 0, posterior)) %>%
+    # But cannot make them 0 as for DHB's the 0's can cause sampling problems
+    mutate(posterior = ifelse(is.nan(posterior), nan_offset, posterior)) %>%
     ungroup() %>%
     dplyr::select(-likelihood_r_t)
 }
 #
-covid_cases %>%
-  filter(state == state_selected) %>%
-  smooth_new_cases() %>%
-  compute_likelihood() %>%
-  compute_posterior() %>%
-  head()
-#display_random()
+# covid_cases %>%
+#   filter(state == state_selected) %>%
+#   smooth_new_cases() %>%
+#   compute_likelihood() %>%
+#   compute_posterior() %>%
+#   head()
+# #display_random()
 #
 # Let us visualize the posterior probabilities we computed.
 # Note how we set alpha = 0.2 to reduce the amount of overplotting.
@@ -347,12 +358,12 @@ plot_posteriors <- function(posteriors){
     theme(legend.position = 'none')
 }
 #
-covid_cases %>%
-  filter(state == state_selected) %>%
-  smooth_new_cases() %>%
-  compute_likelihood() %>%
-  compute_posterior() %>%
-  plot_posteriors()
+# covid_cases %>%
+#   filter(state == state_selected) %>%
+#   smooth_new_cases() %>%
+#   compute_likelihood() %>%
+#   compute_posterior() %>%
+#   plot_posteriors()
 #
 # Estimate Rt
 # The final step is to estimate the values of Rt and the highest density
@@ -364,7 +375,8 @@ estimate_rt <- function(posteriors){
   posteriors %>%
     group_by(state, date) %>%
     summarize(
-      r_t_simulated = list(sample(r_t_range, 10000, replace = TRUE, prob = posterior)),
+      r_t_simulated   = list(sample(r_t_range, 10000, replace = TRUE, prob = posterior)),
+      # r_t_simulated   = list(sample(r_t_range, 10000, replace = TRUE, prob = rep(0.00005, each=length(r_t_range)))),
       r_t_most_likely = r_t_range[which.max(posterior)]
     ) %>%
     mutate(
@@ -374,14 +386,14 @@ estimate_rt <- function(posteriors){
     dplyr::select(-r_t_simulated)
 }
 #
-covid_cases %>%
-  filter(state == state_selected) %>%
-  smooth_new_cases() %>%
-  compute_likelihood() %>%
-  compute_posterior() %>%
-  estimate_rt() %>%
-  head()
-#display_random()
+# covid_cases %>%
+#   filter(state == state_selected) %>%
+#   smooth_new_cases() %>%
+#   compute_likelihood() %>%
+#   compute_posterior() %>%
+#   estimate_rt() %>%
+#   head()
+# #display_random()
 #
 plot_estimates <- function(estimates){
   estimates %>%
@@ -420,7 +432,7 @@ plot_estimates <- function(estimates){
     coord_cartesian(ylim = c(0, 4))
 }
 
-covid_cases %>%
+dhb_state <- covid_cases %>%
   filter(state == state_selected) %>%
   smooth_new_cases() %>%
   compute_likelihood() %>%
@@ -428,22 +440,29 @@ covid_cases %>%
   estimate_rt() %>%
   plot_estimates()
 #
+# View(dhb_state)
+plot(dhb_state)
 # ###############################################
 # Prepare a dataset with all NZ cases
+# ###############################################
+R_T_MAX = 12
+r_t_range = seq(0, R_T_MAX, length = R_T_MAX*100 + 1)
+#
 agg<-aggregate(covid_cases$cases,
                by=list(date=covid_cases$date),
                FUN=sum )
 colnames(agg)[colnames(agg) == 'x'] <- 'cases'
 agg$state <-"AllNZ"
 #
-agg %>%
+agg_tmp <- agg %>%
   filter(state == "AllNZ") %>%
   smooth_new_cases() %>%
   compute_likelihood() %>%
   compute_posterior() %>%
   estimate_rt() %>%
   plot_estimates()
-#
+plot(agg_tmp)
+# ##############################################
 ### Loop across all states
 # It is now time to loop across all states and compute these estimates.
 # e can do this easily by grouping by state, splitting the data into one table

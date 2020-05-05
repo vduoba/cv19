@@ -76,8 +76,8 @@ if (identical(colnames(NZ_Covid19_All), ExpectedCols)) {
 
 # Clean values, verify, select, aggregate, sort
 
-NZ_Covid19_All$DHB <- gsub(" |'", "", NZ_Covid19_All$DHB)
 NZ_Covid19_All$DHB <- enc2native(NZ_Covid19_All$DHB)
+NZ_Covid19_All$DHB <- gsub(" |'", "", NZ_Covid19_All$DHB)
 
 if (identical(sort(unique(NZ_Covid19_All$DHB)), sort(ExpectedDHBs$DHB))) {
   print("PASSED DHB names test")

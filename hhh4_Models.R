@@ -5,6 +5,7 @@
 library(tidyverse)
 library(ggplot2)
 library(forecast) # For ggAcf
+library(R0)
 covid19Model_basic<-list(
   end        = list(f = ~1+t),
   offset     = population(covidNZ),
@@ -102,7 +103,7 @@ model_worrying <- lm(ts_worrying~1+ndx_worrying)
 summary(model_worrying) # 3.8852 for rate of change over steepest deterioration
 #########################################################################
 ### Try the R0 package to calculate R0 (time-dependent or during epidemic acceleration)
-library(R0)
+
 epid.count <- as.integer(ts_dat) # For now, use the predicted vals from loess smooth
 # Create the generation time, gamma distn with mean 2.6 time units and sd 1
 GT.covid19 <- generation.time("gamma", c(5.04, 1))
@@ -138,7 +139,7 @@ res.R_AR <- estimate.R(epid.count, GT=GT.covid19,
 plot(res.R_AR)
 plotfit(res.R_AR)
 #########################################################################
-### Time-averaged proportions of the means explianed by
+### Time-averaged proportions of the means explained by
 ### the different components
 colSums(fitted_components$Overall)[3:5]/sum(fitted_components$Overall[,1])
 ###  endemic          epi.own epi.neighbours

@@ -29,7 +29,7 @@ DataURL <- paste0("https://www.health.govt.nz", DataURLSuffix)
 
 # Error check. Passing will download new data if available, otherwise use local. Result printed
 
-DataDir <- "Data\\NZCases\\"
+DataDir <- "D:\\StatsNZ_Work\\Covid19\\cv19\\Data\\NZCases\\"
 DataPath <- paste0(DataDir, DataFilename)
 
 if (length(DataURL) == 1 & str_sub(DataFilename, -5, -1) == ".xlsx") {
@@ -113,6 +113,7 @@ if (is.Date(DateMax)) {
   print(paste0("Unable to scrape DateMax from cell A2, using max(DateOfReport) instead: ", DateMax))
 }
 
+sum(is.na(NZ_Covid19_All$DateOfReport))
 DateMin <- min(NZ_Covid19_All$DateOfReport)
 
 DateRange <- tibble(Date = seq.Date(DateMin, DateMax, by = "day"))
@@ -162,7 +163,7 @@ population_mRepeated<- as.matrix(population_mRepeated)
 
 # Pull map data [static]
 
-load("Data\\GeospatialData\\DHB2012\\Shapefile_Processed.Rdata", verbose = TRUE)
+load("D:\\StatsNZ_Work\\Covid19\\cv19\\Data\\GeospatialData\\DHB2012\\Shapefile_Processed.Rdata", verbose = TRUE)
 
 # Surveillance Time Series
 

@@ -292,7 +292,7 @@ compute_likelihood <- function(cases){
       likelihood_r_t = map2(new_cases_smooth, lambda, dpois, log = TRUE)
     ) %>%
     slice(-1) %>%
-    sdplyr::elect(-lambda) %>%
+    dplyr::select(-lambda) %>%
     unnest(c(likelihood_r_t, r_t))
 }
 #
@@ -319,7 +319,7 @@ compute_posterior <- function(likelihood){
     # HACK: NaNs in the posterior create issues later on. So we remove them.
     mutate(posterior = ifelse(is.nan(posterior), 0, posterior)) %>%
     ungroup() %>%
-    sdplyr::elect(-likelihood_r_t)
+    dplyr::select(-likelihood_r_t)
 }
 #
 covid_cases %>%
@@ -371,7 +371,7 @@ estimate_rt <- function(posteriors){
       r_t_lo = map_dbl(r_t_simulated, ~ hdi(.x)[1]),
       r_t_hi = map_dbl(r_t_simulated, ~ hdi(.x)[2])
     ) %>%
-    sdplyr::elect(-r_t_simulated)
+    dplyr::select(-r_t_simulated)
 }
 #
 covid_cases %>%

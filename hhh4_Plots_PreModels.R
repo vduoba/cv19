@@ -23,4 +23,3 @@ autoplot.sts(covidNZ, unit=which(colSums(observed(covidNZ))>0)) # Get all 20 plo
 #                     ani.width=500, ani.height=600)
 #
 ####################################################################################
-

@@ -1,4 +1,4 @@
-# Pulls latest case data as well as DHB spatial and population data. Processes it into appropiate inputs for plotting and modelling.
+# Verbose error checking as data location and structure is volatile
 
 library(dplyr)
 library(tidyr)
@@ -8,11 +8,9 @@ library(rvest)
 library(httr)
 library(readxl)
 library(janitor)
-library(surveillance)
-#library(sf)
-#library(spdep)
-#
-# Scrape latest DataURL and DataFilename.Verbose error checking here as data location and structure is volatile
+
+# Scrape latest DataURL and DataFilename
+
 DataPage <- read_html("https://www.health.govt.nz/our-work/diseases-and-conditions/covid-19-novel-coronavirus/covid-19-current-situation/covid-19-current-cases/covid-19-current-cases-details")
 
 DataPageLinks <- DataPage %>%
@@ -27,7 +25,7 @@ DataURL <- paste0("https://www.health.govt.nz", DataURLSuffix)
 
 # Error check. Passing will download new data if available, otherwise use local. Result printed
 
-DataDir <- "D:\\StatsNZ_Work\\Covid19\\cv19\\Data\\NZCases\\"
+DataDir <- "Data\\NZCases\\"
 DataPath <- paste0(DataDir, DataFilename)
 
 if (length(DataURL) == 1 & str_sub(DataFilename, -5, -1) == ".xlsx") {
@@ -46,12 +44,11 @@ if (length(DataURL) == 1 & str_sub(DataFilename, -5, -1) == ".xlsx") {
   DataPath <- NULL
 }
 
-# Pull latest Case Data, bind sheets, clean ColNames, verify structure as expected
+
+# Import Data, bind sheets, clean ColNames, verify structure as expected
 
 ExpectedSheets <- c("Confirmed", "Probable")
 ExpectedCols <- c("DateOfReport", "Sex", "AgeGroup", "DHB", "OverseasTravel", "LastCountryBeforeReturn", "FlightNumber", "FlightDepartureDate", "ArrivalDate")
-ExpectedDHBs <- read_excel("Data\\StandardisedNames.xlsx", sheet = "DHB") %>%
-  dplyr::select(DHB)
 
 if (identical(excel_sheets(DataPath), ExpectedSheets)) {
   NZ_Covid19_Confirmed <- read_excel(DataPath, sheet = "Confirmed", skip = 3)
@@ -76,22 +73,18 @@ if (identical(colnames(NZ_Covid19_All), ExpectedCols)) {
 
 # Clean values, verify, select, aggregate, sort
 
-NZ_Covid19_All$DHB <- enc2native(NZ_Covid19_All$DHB)
-NZ_Covid19_All$DHB <- gsub(" |'", "", NZ_Covid19_All$DHB)
+####### Consider trimming white space:
 
-if (identical(sort(unique(NZ_Covid19_All$DHB)), sort(ExpectedDHBs$DHB))) {
-  print("PASSED DHB names test")
-} else {
-  print("ERROR DHB names exception")
-  sort(unique(NZ_Covid19$DHB_All)) == sort(ExpectedDHBs$DHB)
-}
+NZ_Covid19_All$DHB <- gsub(" ", "", NZ_Covid19_All$DHB)
+NZ_Covid19_All$DHB <- gsub("'", "", NZ_Covid19_All$DHB)
 
-## Consider trimming white space
+## TO DO: make below a test
+## sort(unique(NZ_Covid19$DHB)
 
 NZ_Covid19_All$DateOfReport <- dmy(NZ_Covid19_All$DateOfReport)
 
 NZ_Covid19_Selected <- NZ_Covid19_All %>%
-  dplyr::select("DHB", "DateOfReport")
+  select("DHB", "DateOfReport")
 
 NZ_Covid19_Selected_Agg <- NZ_Covid19_Selected %>%
   count(DHB, DateOfReport, name = "NewCases") %>%
@@ -99,7 +92,7 @@ NZ_Covid19_Selected_Agg <- NZ_Covid19_Selected %>%
 
 # Create DateRange Tibble
 
-## Need to discuss issues with what DateMax to use - Perhaps prudent to use cell A2 - 1 or 2 days
+## Need to discuss issues with what DateMax to use - Perhaps prudent to use cell A2 - 1 or 2 days.
 DateMax <- as.vector(read_excel(DataPath, sheet = "Confirmed", "A2", col_names = "Date")) %>%
   pull(., Date) %>%
   as_date(.)
@@ -111,7 +104,6 @@ if (is.Date(DateMax)) {
   print(paste0("Unable to scrape DateMax from cell A2, using max(DateOfReport) instead: ", DateMax))
 }
 
-sum(is.na(NZ_Covid19_All$DateOfReport))
 DateMin <- min(NZ_Covid19_All$DateOfReport)
 
 DateRange <- tibble(Date = seq.Date(DateMin, DateMax, by = "day"))
@@ -122,56 +114,11 @@ NZ_Covid19 <- full_join(NZ_Covid19_Selected_Agg, DateRange, by = c("DateOfReport
   complete(DHB, nesting(DateOfReport), fill = list(NewCases = 0)) %>%
   filter(!is.na(DHB))
 
-# Pivot Wide. Finalize.
+# Finalizing for compatibility hhh4_002: nz_counts_t
 
-NZ_Covid19.wide <- NZ_Covid19 %>%
+nz_counts_t <- NZ_Covid19 %>%
   pivot_wider(., names_from = DHB, values_from = NewCases) %>%
-  mutate(seq_dayte = as.numeric(DateOfReport) - 18317)
+  mutate(DateOfReport = as.numeric(DateOfReport) - 18317) %>%
+  rename(seq_dayte = DateOfReport)
 
-
-nz_counts_t <- NZ_Covid19.wide %>%
-  dplyr::select(ExpectedDHBs$DHB)
-
-# Pull pop data [static], calc proportion
-## To do: Deprevation data
-
-DHB_Pop_2019 <- read_excel("Data\\DHBData\\DHBPopulation.xlsx") %>%
-  mutate(PopulationProportion = Population / sum(Population))
-
-populationFrac <- DHB_Pop_2019 %>%
-  dplyr::select(DHB, PopulationProportion) %>%
-  pivot_wider(., names_from = DHB, values_from = PopulationProportion)
-
-populationFracRepeated <- populationFrac %>%
-  uncount(., as.integer(DateMax - DateMin + 1))
-
-population_m <- DHB_Pop_2019 %>%
-  dplyr::select(DHB, Population) %>%
-  pivot_wider(., names_from = DHB, values_from = Population)
-
-population_mRepeated <- population_m %>%
-  uncount(., as.integer(DateMax - DateMin + 1))
-
-# Matricize
-
-nz_counts_t <- as.matrix(nz_counts_t)
-mode(nz_counts_t) <- "integer"
-populationFracRepeated <- as.matrix(populationFracRepeated)
-population_mRepeated<- as.matrix(population_mRepeated)
-
-# Pull map data [static]
-
-load("D:\\StatsNZ_Work\\Covid19\\cv19\\Data\\GeospatialData\\DHB2012\\Shapefile_Processed.Rdata", verbose = TRUE)
-
-# Surveillance Time Series
-
-covidNZ <- sts(nz_counts_t,
-               start=c(lubridate::year(DateMin), yday(DateMin)),
-               population=(populationFracRepeated),
-               neighbourhood=nzrems_nbOrder,
-               frequency=365,
-               map=map)
-
-plot(covidNZ)
-
-## OPTIONAL: Remove unnecessary objects: rm(list = c(str_subset(objects(), "NZ_Covid19_.|Data.|Expected[C|S]")))
+## Optional: clear unneeded objects: rm(list=setdiff(ls(), "nz_counts_t"))
